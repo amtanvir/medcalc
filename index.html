@@ -38,6 +38,13 @@
   .app-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; margin-bottom: 14px; }
   .app-header h1 { margin: 0 0 4px 0; font-size: 26px; color: var(--text); }
   .app-header .sub { color: var(--muted); font-size: 13px; }
+  .app-header > div:first-child { flex: 1 1 300px; min-width: 0; }
+  .header-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; margin-left: auto; }
+  .header-controls > .dropdown-wrap > button.ghost { height: 46px; border-radius: 12px; padding: 0 12px; display: inline-flex; align-items: center; gap: 8px; }
+  .header-controls #backupDropdownBtn { padding: 0 10px; font-size: 16px; }
+  .header-controls #backupDropdownBtn .caret { font-size: 9px; }
+  .header-controls .rp-trigger { height: 46px; }
+  @media (max-width: 720px) { .header-controls { justify-content: flex-start; margin-left: 0; } }
   .month-nav { display: flex; align-items: center; gap: 6px; }
   .month-nav button.nav-arrow {
     background: none; border: none; color: var(--primary-dark);
@@ -660,7 +667,7 @@
       <h1>Medicine Purchase Calculator</h1>
       <div class="sub">Track needs for any date range, generate box labels, and export pharmacy orders.</div>
     </div>
-    <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+    <div class="header-controls">
       <div class="dropdown-wrap" id="personSwitcherWrap">
         <button class="ghost" id="personSwitcherBtn" title="Switch person">
           <span class="person-avatar" id="personSwitcherAvatar"></span>
@@ -670,8 +677,8 @@
         <div class="dropdown-menu" id="personSwitcherMenu" style="min-width:260px;"></div>
       </div>
       <div class="dropdown-wrap" id="backupDropdownWrap">
-        <button class="ghost" id="backupDropdownBtn" title="Export or import all your data">&#128190; Backup <span class="caret">&#9660;</span></button>
-        <div class="dropdown-menu" id="backupDropdownMenu" style="min-width:250px;">
+        <button class="ghost" id="backupDropdownBtn" title="Backup: export or import all your data">&#128190; <span class="caret">&#9660;</span></button>
+        <div class="dropdown-menu" id="backupDropdownMenu" style="min-width:250px; right:0; left:auto;">
           <div class="dropdown-item" id="backupExportItem">&#11015;&#65039; Export everything (.json)</div>
           <div class="dropdown-item" id="backupImportItem">&#11014;&#65039; Import backup&hellip;</div>
         </div>
