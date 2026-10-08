@@ -2,7 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#4A6FA5">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="MedCalc">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
 <title>Medicine Purchase Calculator</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%92%8A%3C/text%3E%3C/svg%3E">
 
@@ -267,7 +274,7 @@
   }
   .field-card h3 { margin: 0 0 10px 0; font-size: 13px; color: var(--primary-dark); }
   label.field-label { font-size: 13px; color: var(--text); display: block; margin-bottom: 4px; }
-  input[type=text], input[type=number], input[type=date], textarea, select.plain {
+  input[type=text], input[type=number], input[type=date], input[type=time], input[type=tel], textarea, select.plain {
     font-family: inherit; font-size: 13px; padding: 7px 9px; border-radius: 6px;
     border: 1px solid var(--border); width: 100%;
   }
@@ -657,6 +664,137 @@
   table.results-entry th { text-align:left; font-size:11px; color: var(--muted); text-transform:uppercase; padding:4px 6px; border-bottom:1px solid var(--border); }
   table.results-entry td { padding:6px; border-bottom:1px solid var(--border); vertical-align:top; }
   table.results-entry input[type=text] { padding:5px 7px; }
+  /* ===================== Mobile / phone layout ===================== */
+  .pt-short, .mobile-only { display: none; }
+  .dropdown-sep { height: 1px; background: var(--border); margin: 4px 0; }
+  .doctor-grid { grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr)); }
+  .trend-grid { grid-template-columns: repeat(auto-fill, minmax(min(330px, 100%), 1fr)); }
+  #remHistoryBody, #visitHistoryBody, #testHistoryBody { overflow-x: auto; }
+
+  @media (max-width: 640px) {
+    html, body { overflow-x: hidden; }
+    .app { padding: 12px 12px calc(84px + env(safe-area-inset-bottom)) 12px; }
+    .desktop-only { display: none !important; }
+    .mobile-only { display: inline-block; }
+
+    /* bigger touch targets; 16px inputs stop iOS from zooming in */
+    button { min-height: 44px; }
+    button.chip, .rp-day, .rp-navbtn, .vr-del, .cdp-close { min-height: 0; }
+    input[type=text], input[type=number], input[type=date], input[type=time], input[type=tel], textarea, select { font-size: 16px !important; }
+    .dropdown-item { padding: 13px 16px; font-size: 15px; }
+
+    /* header */
+    .app-header h1 { font-size: 21px; }
+    .app-header .sub { font-size: 12px; }
+    .header-controls { width: 100%; gap: 8px; }
+    .header-controls .rp-wrap { width: 100%; justify-content: space-between; }
+    .header-controls .rp-trigger { flex: 1; justify-content: center; }
+
+    /* bottom tab bar */
+    .page-tab-row {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 90; margin: 0;
+      display: grid; grid-template-columns: repeat(5, 1fr); gap: 0;
+      background: var(--card); border-top: 1px solid var(--border); border-bottom: none;
+      box-shadow: 0 -4px 14px rgba(30,40,55,0.08);
+      padding: 4px 2px calc(4px + env(safe-area-inset-bottom)) 2px;
+    }
+    .page-tab-btn {
+      flex-direction: column; justify-content: center; gap: 2px; padding: 6px 2px; margin: 0;
+      border-bottom: none; border-top: 3px solid transparent; border-radius: 0; min-height: 56px;
+      font-size: 10.5px; font-weight: 600;
+    }
+    .page-tab-btn.active { border-top-color: var(--primary); border-bottom-color: transparent; background: rgba(91,127,185,0.07); }
+    .page-tab-btn .pt-ico { font-size: 20px; line-height: 1; }
+    .page-tab-btn .pt-full { display: none; }
+    .page-tab-btn .pt-short { display: block; }
+    .toast { bottom: calc(86px + env(safe-area-inset-bottom)); max-width: calc(100vw - 24px); }
+
+    /* sub-tabs scroll sideways instead of overflowing */
+    .tab-row { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+    .tab-row::-webkit-scrollbar { display: none; }
+    .tab-btn { white-space: nowrap; flex: 0 0 auto; }
+
+    /* action bars */
+    .action-bar { gap: 8px; }
+    .action-bar .spacer { display: none; }
+    #calcPageView > .action-bar #addMedBtn { flex: 1; justify-content: center; font-size: 15px; }
+    #calcMoreWrap .dropdown-menu { position: fixed; left: 12px; right: 12px; top: auto; bottom: calc(80px + env(safe-area-inset-bottom)); max-height: 70vh; overflow-y: auto; }
+    .notif-pill { width: 100%; justify-content: center; }
+    #addReminderBtn, #addVisitBtn, #addTestBtn { flex: 1; justify-content: center; font-size: 15px; }
+
+    /* medicine table -> cards */
+    #calcPageView .card-panel { background: transparent; border: none; overflow: visible; }
+    #calcPageView table.med-table thead { display: none; }
+    #calcPageView table.med-table, #calcPageView table.med-table tbody { display: block; width: 100%; }
+    #calcPageView table.med-table tbody tr:not(.empty-row) {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px 6px;
+      background: var(--card) !important; border: 1px solid var(--border); border-radius: 12px;
+      padding: 12px; margin-bottom: 10px; box-shadow: 0 1px 2px rgba(30,50,80,0.05);
+    }
+    #calcPageView table.med-table tbody tr.ended { opacity: 0.6; }
+    #calcPageView table.med-table tbody td { border: none; padding: 0; background: none !important; }
+    #calcPageView table.med-table td.c-icon { grid-area: 1 / 1 / 2 / 2; justify-self: start; font-size: 22px; align-self: center; width: 30px; text-align: left; }
+    #calcPageView table.med-table td.c-name { grid-area: 1 / 1 / 2 / 5; padding-left: 36px; font-size: 15px; font-weight: 600; align-self: center; min-height: 28px; display: flex; align-items: center; }
+    #calcPageView table.med-table td.c-sched { grid-area: 2 / 1 / 3 / 5; font-size: 12.5px; color: var(--text-light); }
+    #calcPageView table.med-table tbody tr:not(.empty-row) td.c-num {
+      grid-row: 3; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: var(--card-alt) !important; border-radius: 8px; padding: 6px 2px; font-size: 18px; font-weight: 700; min-height: 54px;
+    }
+    #calcPageView table.med-table td.c-num::before { content: attr(data-label); font-size: 10.5px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 2px; }
+    #calcPageView table.med-table td.c-num:nth-of-type(4) { grid-column: 1; }
+    #calcPageView table.med-table td.c-num:nth-of-type(5) { grid-column: 2; }
+    #calcPageView table.med-table td.c-num:nth-of-type(6) { grid-column: 3; }
+    #calcPageView table.med-table td.c-num:nth-of-type(7) { grid-column: 4; }
+    #calcPageView table.med-table tr.need_order td.c-buy { color: var(--buy-orange); }
+    #calcPageView table.med-table td.editable { text-decoration: underline dotted; }
+    #calcPageView table.med-table tbody tr.empty-row td { display: block; text-align: center; padding: 24px 12px; background: var(--card); border-radius: 12px; }
+    .bottom-bar { flex-direction: column; align-items: stretch; }
+    .bottom-bar > div:first-child { display: flex; gap: 8px; }
+    .bottom-bar > div:first-child button { flex: 1; justify-content: center; }
+    .bottom-bar .summary { text-align: left; }
+
+    /* forms (modals) fill the screen, fields stack, Save stays at the bottom */
+    .modal-overlay { padding: 0; align-items: stretch; }
+    .modal { max-width: 100% !important; max-height: none; height: 100%; height: 100dvh; border-radius: 0; }
+    .modal-header { padding: calc(14px + env(safe-area-inset-top)) 16px 4px 16px; }
+    .modal-header h2 { font-size: 18px; }
+    .modal-body { padding: 4px 12px 12px 12px; }
+    .modal-body > div[style*="display:flex"], .modal-body > div[style*="display: flex"] { flex-direction: column; gap: 0 !important; }
+    .modal-body > div[style*="display:flex"] > *, .modal-body > div[style*="display: flex"] > * { flex: none !important; width: 100%; }
+    .field-card { padding: 12px; margin: 8px 0; }
+    .modal-footer { padding: 10px 12px calc(10px + env(safe-area-inset-bottom)) 12px; flex-wrap: wrap; }
+    .modal-footer button { flex: 1; justify-content: center; }
+    .modal-footer button.danger { flex: 0 0 auto; }
+    .lead-time-row select { min-width: 0; }
+    .visit-rem-row { flex-wrap: wrap; }
+    .visit-rem-row input[type=time] { max-width: 150px; width: auto; }
+    .lead-time-row input[type=time], .lead-time-row input[type=date] { width: auto; }
+    table.results-entry thead { display: none; }
+    table.results-entry, table.results-entry tbody, table.results-entry tr, table.results-entry td { display: block; width: 100%; }
+    table.results-entry tr { border: 1px solid var(--border); border-radius: 10px; padding: 8px; margin-bottom: 8px; background: var(--card); }
+    table.results-entry td { border: none; padding: 3px 0; }
+
+    /* calendars */
+    .rem-calendar { gap: 2px; }
+    .rem-cal-day { min-height: 50px; padding: 3px; border-radius: 6px; }
+    .rem-cal-day .cal-daynum { font-size: 11px; }
+    .visit-day-label { font-size: 0; margin-top: 1px; }
+    .visit-day-label .rem-cal-dot { width: 9px; height: 9px; }
+    .rem-calendar-nav .cal-title { font-size: 14px; }
+    .rem-legend { gap: 8px 12px; font-size: 11px; }
+
+    /* history tables scroll sideways inside their card */
+    table.rem-history-table { min-width: 540px; font-size: 12px; }
+    #testPanelLib .card-panel, #libPageView .card-panel { overflow-x: auto; }
+    #testPanelLib table.rem-history-table { min-width: 600px; }
+
+    .home-rem-banner { padding: 10px 12px; gap: 10px; }
+    .home-rem-banner .hrb-icon { font-size: 22px; }
+    .home-rem-banner .hrb-main { font-size: 13px; }
+    .next-inject-card { padding: 14px 16px; }
+    .rem-item .rem-actions button { min-height: 38px; font-size: 12px; }
+    .doctor-card .dc-actions button { min-height: 38px; }
+  }
 </style>
 </head>
 <body>
@@ -681,6 +819,7 @@
         <div class="dropdown-menu" id="backupDropdownMenu" style="min-width:250px; right:0; left:auto;">
           <div class="dropdown-item" id="backupExportItem">&#11015;&#65039; Export everything (.json)</div>
           <div class="dropdown-item" id="backupImportItem">&#11014;&#65039; Import backup&hellip;</div>
+          <div class="dropdown-item" id="installAppItem" style="display:none;">&#128242; Install as app</div>
         </div>
       </div>
       <div class="month-nav rp-wrap">
@@ -723,11 +862,11 @@
   </div>
 
   <div class="page-tab-row no-print">
-    <button class="page-tab-btn active" id="pageTabCalcBtn">&#128138; Purchase Calculator</button>
-    <button class="page-tab-btn" id="pageTabRemBtn">&#9200; Medicine Reminder</button>
-    <button class="page-tab-btn" id="pageTabVisitBtn">&#129658; Doctor Visits</button>
-    <button class="page-tab-btn" id="pageTabTestBtn">&#129514; Tests</button>
-    <button class="page-tab-btn" id="pageTabLibBtn">&#128218; Medicine Library</button>
+    <button class="page-tab-btn active" id="pageTabCalcBtn"><span class="pt-ico">&#128138;</span><span class="pt-full">Purchase Calculator</span><span class="pt-short">Calculator</span></button>
+    <button class="page-tab-btn" id="pageTabRemBtn"><span class="pt-ico">&#9200;</span><span class="pt-full">Medicine Reminder</span><span class="pt-short">Reminders</span></button>
+    <button class="page-tab-btn" id="pageTabVisitBtn"><span class="pt-ico">&#129658;</span><span class="pt-full">Doctor Visits</span><span class="pt-short">Visits</span></button>
+    <button class="page-tab-btn" id="pageTabTestBtn"><span class="pt-ico">&#129514;</span><span class="pt-full">Tests</span><span class="pt-short">Tests</span></button>
+    <button class="page-tab-btn" id="pageTabLibBtn"><span class="pt-ico">&#128218;</span><span class="pt-full">Medicine Library</span><span class="pt-short">Library</span></button>
   </div>
 
   <div class="page-view active" id="calcPageView">
@@ -757,17 +896,32 @@
   </div>
   <div class="action-bar">
     <button class="primary" id="addMedBtn" title="Add a new medicine (Ctrl+N)">+ Add Medicine</button>
-    <button class="ghost" id="editMedBtn" title="Edit selected (F2)">Edit Selected</button>
-    <button class="danger" id="deleteMedBtn" title="Delete selected (Del)">Delete Selected</button>
+    <button class="ghost desktop-only" id="editMedBtn" title="Edit selected (F2)">Edit Selected</button>
+    <button class="danger desktop-only" id="deleteMedBtn" title="Delete selected (Del)">Delete Selected</button>
     <div class="spacer"></div>
-    <div class="dropdown-wrap" id="printDropdownWrap">
+    <div class="dropdown-wrap mobile-only" id="calcMoreWrap">
+      <button class="ghost" id="calcMoreBtn">&#8943; More</button>
+      <div class="dropdown-menu" id="calcMoreMenu" style="right:0; left:auto; min-width:250px;">
+        <div class="dropdown-item" data-proxy="editMedBtn">&#9998;&#65039; Edit selected medicine</div>
+        <div class="dropdown-item" data-proxy="deleteMedBtn">&#128465;&#65039; Delete selected medicine</div>
+        <div class="dropdown-sep"></div>
+        <div class="dropdown-item" data-proxy="printLabelsBtn">&#127991;&#65039; Print Box Labels</div>
+        <div class="dropdown-item" data-proxy="printPrescriptionBtn">&#128203; Print Full Prescription</div>
+        <div class="dropdown-sep"></div>
+        <div class="dropdown-item" data-proxy="exportPharmacyPdfBtn">&#128196; Pharmacy: Export PDF</div>
+        <div class="dropdown-item" data-proxy="previewPharmacyImgBtn">&#128065;&#65039; Pharmacy: Preview Image</div>
+        <div class="dropdown-item" data-proxy="exportPharmacyImgBtn">&#128444;&#65039; Pharmacy: Export Image</div>
+        <div class="dropdown-item" data-proxy="exportCalcListBtn">&#128203; Pharmacy Calculation List</div>
+      </div>
+    </div>
+    <div class="dropdown-wrap desktop-only" id="printDropdownWrap">
       <button class="accent" id="printDropdownBtn" title="Print (Ctrl+L)">&#128424;&#65039; Print <span class="caret">&#9660;</span></button>
       <div class="dropdown-menu" id="printDropdownMenu">
         <div class="dropdown-item" id="printLabelsBtn">&#127991;&#65039; Print Box Labels</div>
         <div class="dropdown-item" id="printPrescriptionBtn">&#128203; Print Full Prescription</div>
       </div>
     </div>
-    <div class="dropdown-wrap" id="pharmacyDropdownWrap">
+    <div class="dropdown-wrap desktop-only" id="pharmacyDropdownWrap">
       <button class="info-btn" id="pharmacyDropdownBtn" title="Export for pharmacy (Ctrl+E)">&#128184; Export for Pharmacy <span class="caret">&#9660;</span></button>
       <div class="dropdown-menu" id="pharmacyDropdownMenu">
         <div class="dropdown-item" id="exportPharmacyPdfBtn">&#128196; Export as PDF</div>
@@ -2699,16 +2853,20 @@ function refreshList() {
     const editableAttr = isInactive ? '' : 'editable';
 
     tr.innerHTML = `
-      <td class="center">${icon}</td>
-      <td>${formatMedicineName(med)}</td>
-      <td>${schedule}</td>
-      <td class="center">${needed}</td>
-      <td class="center ${editableAttr}" data-kind="have">${onHand}</td>
-      <td class="center">${toBuy}</td>
-      <td class="center ${editableAttr} ${qtyClass}" data-kind="qty">${qtyDisplay}</td>
+      <td class="center c-icon">${icon}</td>
+      <td class="c-name">${formatMedicineName(med)}</td>
+      <td class="c-sched">${schedule}</td>
+      <td class="center c-num" data-label="Need">${needed}</td>
+      <td class="center c-num ${editableAttr}" data-kind="have" data-label="Have">${onHand}</td>
+      <td class="center c-num c-buy" data-label="To Buy">${toBuy}</td>
+      <td class="center c-num ${editableAttr} ${qtyClass}" data-kind="qty" data-label="Order Qty">${qtyDisplay}</td>
     `;
 
-    tr.addEventListener('click', () => selectRow(med.id));
+    tr.addEventListener('click', (ev) => {
+      const td = ev.target.closest('td');
+      if (isPhoneLayout() && td && td.dataset.kind && !isInactive) { onRowDoubleClick(ev, med, status); return; }
+      selectRow(med.id);
+    });
     tr.addEventListener('dblclick', (ev) => onRowDoubleClick(ev, med, status));
 
     tbody.appendChild(tr);
@@ -7430,7 +7588,56 @@ function initTestModule() {
   checkDueTestNotifications();
 }
 
+
+// =========================================================
+// Mobile helpers + installable app (PWA)
+// =========================================================
+function isPhoneLayout() { return !!(window.matchMedia && window.matchMedia('(max-width: 640px)').matches); }
+let deferredInstallPrompt = null;
+function initMobileAndPWA() {
+  const moreBtn = document.getElementById('calcMoreBtn');
+  const moreMenu = document.getElementById('calcMoreMenu');
+  moreBtn.addEventListener('click', (e) => { e.stopPropagation(); moreMenu.classList.toggle('open'); });
+  document.addEventListener('click', () => moreMenu.classList.remove('open'));
+  moreMenu.querySelectorAll('[data-proxy]').forEach(item => item.addEventListener('click', (e) => {
+    e.stopPropagation();
+    moreMenu.classList.remove('open');
+    const target = document.getElementById(item.dataset.proxy);
+    if (target) target.click();
+  }));
+
+  // Install as app
+  const installItem = document.getElementById('installAppItem');
+  const isStandalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  if (!isStandalone && isIOS && location.protocol.startsWith('http')) installItem.style.display = '';
+  window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredInstallPrompt = e; installItem.style.display = ''; });
+  window.addEventListener('appinstalled', () => { installItem.style.display = 'none'; showToast('App installed.'); });
+  installItem.addEventListener('click', async () => {
+    document.getElementById('backupDropdownMenu').classList.remove('open');
+    if (deferredInstallPrompt) {
+      deferredInstallPrompt.prompt();
+      try { await deferredInstallPrompt.userChoice; } catch (e) {}
+      deferredInstallPrompt = null;
+      installItem.style.display = 'none';
+    } else if (isIOS) {
+      alert('To install on iPhone/iPad:\n\n1. Tap the Share button (square with arrow) in Safari\n2. Choose "Add to Home Screen"\n3. Tap Add');
+    }
+  });
+
+  // Offline support (only works when hosted on http/https, e.g. GitHub Pages)
+  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+    navigator.serviceWorker.register('sw.js').catch(err => console.warn('Service worker not registered:', err));
+  }
+  // re-render the medicine list when crossing the phone/desktop breakpoint
+  if (window.matchMedia) {
+    const mq = window.matchMedia('(max-width: 640px)');
+    if (mq.addEventListener) mq.addEventListener('change', () => refreshList()); else if (mq.addListener) mq.addListener(() => refreshList());
+  }
+}
+
 document.addEventListener('DOMContentLoaded', initApp);
+document.addEventListener('DOMContentLoaded', initMobileAndPWA);
 
 // Expose key internals on window for console debugging (harmless, read/write
 // access to the same objects the app already uses internally).
