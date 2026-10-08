@@ -669,6 +669,13 @@
         </button>
         <div class="dropdown-menu" id="personSwitcherMenu" style="min-width:260px;"></div>
       </div>
+      <div class="dropdown-wrap" id="backupDropdownWrap">
+        <button class="ghost" id="backupDropdownBtn" title="Export or import all your data">&#128190; Backup <span class="caret">&#9660;</span></button>
+        <div class="dropdown-menu" id="backupDropdownMenu" style="min-width:250px;">
+          <div class="dropdown-item" id="backupExportItem">&#11015;&#65039; Export everything (.json)</div>
+          <div class="dropdown-item" id="backupImportItem">&#11014;&#65039; Import backup&hellip;</div>
+        </div>
+      </div>
       <div class="month-nav rp-wrap">
         <button class="nav-arrow" id="prevMonthBtn" title="Move end date back one month (Ctrl+Left)">&lsaquo;</button>
         <button class="rp-trigger" id="rpTrigger" title="Choose the calculation period">
@@ -791,7 +798,7 @@
   </div>
 
   <div style="margin-top:16px; text-align:center;">
-    <button class="ghost" id="exportBackupBtn" title="Save all your data to a .json file">&#128190; Export Backup</button>
+    <button class="ghost" id="exportBackupBtn" title="Save ALL your data (every person, medicines, reminders, visits, doctors, tests, settings) to a .json file">&#128190; Export Everything</button>
     <button class="ghost" id="importBackupBtn" title="Load data from a .json backup file">&#128194; Import Backup</button>
     <input type="file" id="importBackupInput" accept=".json" style="display:none;">
   </div>
@@ -4285,7 +4292,17 @@ function saveTypeCount() {
 // =========================================================
 // Backup export / import
 // =========================================================
+// Every localStorage key that belongs to this app
+function isAppStorageKey(k) { return (k.startsWith('mpc_') || k.startsWith('medcalc_')) && k !== NOTIF_PERM_KEY; }
 function exportBackup() {
+  // flush in-memory data first so nothing unsaved is missed
+  try { saveMedicines(state.medicines); saveLibrary(state.library); saveReminders(state.reminders);
+        saveVisits(state.visits); saveDoctors(state.doctors); saveTests(state.tests); } catch (e) { console.error(e); }
+  const all_storage = {};
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (isAppStorageKey(k)) all_storage[k] = localStorage.getItem(k);
+  }
   const payload = {
     format: 'mpc-multi-person-v1',
     people: state.people,
@@ -4300,16 +4317,37 @@ function exportBackup() {
       tests: p.id === state.activePersonId ? state.tests : loadTestsForPerson(p.id),
     })),
     test_library: TEST_LIBRARY,
+    medicine_types: MEDICINE_TYPES,
+    all_storage,           // complete copy of everything (used for a full restore)
     exported_at: new Date().toISOString(),
   };
-  downloadTextFile('MedicinePurchaseCalculator_Backup.json', JSON.stringify(payload, null, 2), 'application/json');
-  showToast('Backup downloaded.');
+  const stamp = todayISOStr();
+  downloadTextFile(`MedicineApp_FullBackup_${stamp}.json`, JSON.stringify(payload, null, 2), 'application/json');
+  const counts = backupCounts(payload);
+  showToast(`Backup downloaded — ${counts}.`);
+}
+function backupCounts(payload) {
+  const d = payload.data || [];
+  const sum = k => d.reduce((n, e) => n + (Array.isArray(e[k]) ? e[k].length : 0), 0);
+  return `${(payload.people || []).length} people, ${sum('medicines')} medicines, ${sum('reminders')} reminders, ${sum('visits')} visits, ${sum('tests')} tests`;
 }
 function importBackup(file) {
   const reader = new FileReader();
   reader.onload = () => {
     try {
       const data = JSON.parse(reader.result);
+      if (data.all_storage && typeof data.all_storage === 'object' && Object.keys(data.all_storage).length) {
+        // Full backup: replace everything on this site with the backup, then reload.
+        const when = data.exported_at ? new Date(data.exported_at).toLocaleString() : 'unknown date';
+        if (!confirm(`Restore FULL backup from ${when}?\n\nContains: ${backupCounts(data)}.\n\nThis REPLACES everything currently in the app on this site.`)) return;
+        const existing = [];
+        for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (isAppStorageKey(k)) existing.push(k); }
+        existing.forEach(k => localStorage.removeItem(k));
+        Object.entries(data.all_storage).forEach(([k, v]) => { if (isAppStorageKey(k) && typeof v === 'string') localStorage.setItem(k, v); });
+        alert('Backup restored. The app will now reload.');
+        location.reload();
+        return;
+      }
       if (Array.isArray(data.people) && Array.isArray(data.data)) {
         // New multi-person backup format.
         if (!confirm('This will REPLACE ALL people and their medicines/library with the backup. Continue?')) return;
@@ -4327,6 +4365,7 @@ function importBackup(file) {
           if (Array.isArray(entry.tests)) localStorage.setItem(testsKeyFor(entry.person_id), JSON.stringify(entry.tests));
         });
         if (Array.isArray(data.test_library)) { TEST_LIBRARY = data.test_library.map(migrateTestLibEntry); saveTestLibrary(); }
+        if (Array.isArray(data.medicine_types) && data.medicine_types.length) { saveTypes(data.medicine_types); MEDICINE_TYPES = loadTypes(); }
         savePeople(state.people);
         const restoreId = (data.active_person_id && state.people.some(p => p.id === data.active_person_id))
           ? data.active_person_id : state.people[0].id;
@@ -5280,8 +5319,15 @@ function initApp() {
   document.getElementById('countPhotoBtn').addEventListener('click', openPhotoCounter);
   document.getElementById('typeCountBtn').addEventListener('click', openTypeCountModal);
   document.getElementById('exportBackupBtn').addEventListener('click', exportBackup);
+  document.getElementById('backupDropdownBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    document.getElementById('backupDropdownMenu').classList.toggle('open');
+  });
+  document.addEventListener('click', () => document.getElementById('backupDropdownMenu').classList.remove('open'));
+  document.getElementById('backupExportItem').addEventListener('click', () => { document.getElementById('backupDropdownMenu').classList.remove('open'); exportBackup(); });
+  document.getElementById('backupImportItem').addEventListener('click', () => { document.getElementById('backupDropdownMenu').classList.remove('open'); document.getElementById('importBackupInput').click(); });
   document.getElementById('importBackupBtn').addEventListener('click', () => document.getElementById('importBackupInput').click());
-  document.getElementById('importBackupInput').addEventListener('change', (e) => { if (e.target.files[0]) importBackup(e.target.files[0]); });
+  document.getElementById('importBackupInput').addEventListener('change', (e) => { if (e.target.files[0]) importBackup(e.target.files[0]); e.target.value = ''; });
 
   // Medicine modal
   document.getElementById('medSaveBtn').addEventListener('click', saveMedicine);
